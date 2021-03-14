@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <form @submit.prevent="checkForm" novalidate>
+    <form @submit.prevent="checkForm" novalidate v-if="!showSuccess">
       <div>
         <label>Фамилия*</label>
         <input
@@ -10,11 +10,16 @@
           type="text"
         />
         <span v-if="$v.lastName.$error">Поле обязательное для заполнения</span>
-        <!-- <pre>{{ $v.lastName }}</pre> -->
       </div>
       <div>
         <label>Имя*</label>
-        <input v-model="firstName" type="text" />
+        <input
+          v-model="firstName"
+          @blur="$v.firstName.$touch()"
+          :class="{ errorValid: $v.firstName.$error }"
+          type="text"
+        />
+        <span v-if="$v.firstName.$error">Поле обязательное для заполнения</span>
       </div>
       <div>
         <label>Отчество</label>
@@ -22,7 +27,15 @@
       </div>
       <div>
         <label for="date">Дата рождения*: </label>
-        <input type="date" id="date" name="date" v-model="birthday" />
+        <input
+          type="date"
+          id="date"
+          name="date"
+          v-model="birthday"
+          @blur="$v.birthday.$touch()"
+          :class="{ errorValid: $v.birthday.$error }"
+        />
+        <span v-if="$v.birthday.$error">Поле обязательное для заполнения</span>
       </div>
       <div>
         <label>Номер телефона*</label>
@@ -32,8 +45,16 @@
           :class="{ errorValid: $v.phone.$error }"
           type="number"
         />
-        <span v-if="$v.phone.$error">Поле обязательное для заполнения</span>
-        <!-- <pre>{{ $v.phone }}</pre> -->
+        <span v-if="$v.phone.$error && !$v.phone.required"
+          >Поле обязательное для заполнения</span
+        >
+        <span v-if="$v.phone.$error && !$v.phone.checkFirstLetter"
+          >Номер должен начинаться с 7</span
+        >
+        <span
+          v-if="$v.phone.$error && (!$v.phone.minLength || !$v.phone.maxLength)"
+          >Номер долден содержать 11 цифр</span
+        >
       </div>
       <div>
         <span>Пол</span>
@@ -44,11 +65,21 @@
       </div>
       <div>
         <label>Группа клиентов*</label>
-        <select size="3" multiple name="" v-model="customerGroup">
+        <select
+          size="3"
+          multiple
+          name=""
+          v-model="customerGroup"
+          @blur="$v.customerGroup.$touch()"
+          :class="{ errorValid: $v.customerGroup.$error }"
+        >
           <option value="VIP">VIP</option>
           <option value="Проблемные">Проблемные</option>
           <option value="ОМС">ОМС</option>
         </select>
+        <span v-if="$v.customerGroup.$error"
+          >Поле обязательное для заполнения</span
+        >
       </div>
       <div>
         <label>Лечащий врач</label>
@@ -65,7 +96,7 @@
       <h3>Адрес:</h3>
       <div>
         <label>Индекс</label>
-        <input type="number" v-model="index" />
+        <input type="text" v-model="index" />
       </div>
       <div>
         <label>Страна</label>
@@ -77,7 +108,13 @@
       </div>
       <div>
         <label>Город*</label>
-        <input type="text" v-model="city" />
+        <input
+          type="text"
+          v-model="city"
+          @blur="$v.city.$touch()"
+          :class="{ errorValid: $v.city.$error }"
+        />
+        <span v-if="$v.city.$error">Поле обязательное для заполнения</span>
       </div>
       <div>
         <label>Улица</label>
@@ -85,18 +122,27 @@
       </div>
       <div>
         <label>Дом</label>
-        <input type="number" v-model="houseNumber" />
+        <input type="text" v-model="houseNumber" />
       </div>
       <h3>Паспорт:</h3>
       <div>
         <label>Тип документа*</label>
-        <select size="3" name="" v-model="documentType">
+        <select
+          size="3"
+          name=""
+          v-model="documentType"
+          @blur="$v.documentType.$touch()"
+          :class="{ errorValid: $v.documentType.$error }"
+        >
           <option value="Паспорт">Паспорт</option>
           <option value="Свидетельство о рождении">
             Свидетельство о рождении
           </option>
           <option value="Вод. удостоверение">Вод. удостоверение</option>
         </select>
+        <span v-if="$v.documentType.$error"
+          >Поле обязательное для заполнения</span
+        >
       </div>
       <div>
         <label>Серия</label>
@@ -112,13 +158,25 @@
       </div>
       <div>
         <label for="date">Дата выдачи*</label>
-        <input type="date" id="date" name="date" v-model="dateOfIssue" />
+        <input
+          type="date"
+          id="date"
+          name="date"
+          v-model="dateOfIssue"
+          @blur="$v.dateOfIssue.$touch()"
+          :class="{ errorValid: $v.dateOfIssue.$error }"
+        />
+        <span v-if="$v.dateOfIssue.$error"
+          >Поле обязательное для заполнения</span
+        >
       </div>
       <input type="submit" value="Submit" />
     </form>
 
-    <hr />
-    <div>
+    <div v-else>
+      Новый клиент успешно создан
+    </div>
+    <!-- <div>
       <table class="table table-bordered">
         <tr>
           <td>Фамилия</td>
@@ -201,12 +259,12 @@
           <td>{{ dateOfIssue }}</td>
         </tr>
       </table>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script>
-import { required } from "vuelidate/lib/validators";
+import { required, minLength, maxLength } from "vuelidate/lib/validators";
 const checkFirstLetter = (value) => value[0] == 7;
 export default {
   name: "App",
@@ -232,43 +290,44 @@ export default {
       documentNumber: "",
       lssuedBy: "",
       dateOfIssue: "",
-      // valName: "validatorName",
+      showSuccess: false,
     };
   },
   validations: {
     lastName: {
       required,
     },
-    // firstName: {
-    //   required,
-    // },
-    // birthday: {
-    //   required,
-    // },
+    firstName: {
+      required,
+    },
+    birthday: {
+      required,
+    },
     phone: {
       required,
-      // minLength: minLength(11),
-      // maxLength: maxLength(11),
-      checkFirstLetter,
+      minLength: minLength(11),
+      maxLength: maxLength(11),
+      checkFirstLetter, // должнен начинаться с 7
     },
-    // customerGroup: {
-    //   required,
-    // },
-    // city: {
-    //   required,
-    // },
-    // documentType: {
-    //   required,
-    // },
-    // dateOfIssue: {
-    //   required,
-    // },
+    customerGroup: {
+      required,
+    },
+    city: {
+      required,
+    },
+    documentType: {
+      required,
+    },
+    dateOfIssue: {
+      required,
+    },
   },
   methods: {
     checkForm() {
       this.$v.$touch();
       if (!this.$v.$error) {
         console.log("ok");
+        this.showSuccess = true;
       }
     },
   },
